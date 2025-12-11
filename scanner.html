@@ -1,52 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UCHeck Scanner</title>
+<title>UCHeck QR Scanner</title>
 
+<!-- QR Scanner library -->
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-  body { text-align: center; font-family: Arial; }
+  body { font-family: Arial; text-align: center; padding: 20px; }
   #reader { width: 300px; margin: auto; }
-  #status { margin-top: 20px; font-size: 18px; }
+  #status { margin-top: 20px; font-size: 18px; font-weight: bold; }
+  button { margin-top: 15px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <h2>UCHeck – QR Attendance Scanner</h2>
+<p>Scan your QR code to record attendance.</p>
 <div id="reader"></div>
-<div id="status">Waiting for scan...</div>
+<div id="status">Waiting for QR scan...</div>
 
 <script>
-// ⭐ PASTE your Google Apps Script URL here
-const WEBAPP = "https://script.google.com/macros/s/AKfycbzeuNXZ_klb1NJCm_z8F8bCklphlP7mpHBeB6lCObwaHxn-cDMN84cRVnidlowcBlu_fg/exec";
-
 const statusBox = document.getElementById("status");
 
-function show(msg, color="black") {
-    statusBox.innerHTML = msg;
+function showStatus(message, color="black") {
+    statusBox.innerText = message;
     statusBox.style.color = color;
 }
 
-function onScanSuccess(text) {
-    show("Detected: " + text, "blue");
-
+// Called when QR is successfully scanned
+function onScanSuccess(decodedText, decodedResult) {
+    showStatus("QR detected! Redirecting...", "blue");
     html5QrCode.stop().then(() => {
-        fetch(WEBAPP + "?id=" + encodeURIComponent(text))
-          .then(res => res.text())
-          .then(msg => show(msg, "green"))
-          .catch(() => show("Error sending data", "red"));
+        // Open the full URL contained in the QR code
+        window.location.href = decodedText;
+    }).catch(err => {
+        showStatus("Error stopping scanner.", "red");
+        console.error(err);
     });
 }
 
+// Called when scan fails (can be ignored)
+function onScanFailure(error) { }
+
+// Initialize scanner
 const html5QrCode = new Html5Qrcode("reader");
 html5QrCode.start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: 250 },
-  onScanSuccess,
-  () => {}
-);
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    onScanSuccess,
+    onScanFailure
+).catch(err => showStatus("Camera not accessible ❌", "red"));
 </script>
 
 </body>
