@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UCHeck Scanner</title>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<style>
+  body { text-align: center; font-family: Arial; }
+  #reader { width: 300px; margin: auto; }
+  #status { margin-top: 20px; font-size: 18px; }
+</style>
+</head>
+<body>
+
+<h2>UCHeck – QR Attendance Scanner</h2>
+<div id="reader"></div>
+<div id="status">Waiting for scan...</div>
+
+<script>
+// ⭐ PASTE your Google Apps Script URL here
+const WEBAPP = "YOUR_WEB_APP_URL_HERE";
+
+const statusBox = document.getElementById("status");
+
+function show(msg, color="black") {
+    statusBox.innerHTML = msg;
+    statusBox.style.color = color;
+}
+
+function onScanSuccess(text) {
+    show("Detected: " + text, "blue");
+
+    html5QrCode.stop().then(() => {
+        fetch(WEBAPP + "?id=" + encodeURIComponent(text))
+          .then(res => res.text())
+          .then(msg => show(msg, "green"))
+          .catch(() => show("Error sending data", "red"));
+    });
+}
+
+const html5QrCode = new Html5Qrcode("reader");
+html5QrCode.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 250 },
+  onScanSuccess,
+  () => {}
+);
+</script>
+
+</body>
+</html>
